@@ -2,25 +2,28 @@ import React from "react";
 
 function RequirementsInput({ value, setValue }) {
   return (
-    <div style={styles.box}>
-      <h3>Client Requirements</h3>
-      <textarea
-        rows="4"
-        style={{ width: "100%" }}
-        placeholder="e.g. Button should be blue, spacing 16px"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
+    <div className="panel">
+      <div className="panel__header">
+        <span className="panel__header-icon">📋</span>
+        Client Requirements
+      </div>
+      <div className="panel__body">
+        <div className="form-field">
+          <label className="form-label" htmlFor="requirements-input">
+            Describe what the design should follow
+          </label>
+          <textarea
+            id="requirements-input"
+            className="form-textarea"
+            rows={4}
+            placeholder="e.g. Button should be blue, font size 16px, spacing 24px, neon dark theme..."
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  box: {
-    border: "1px solid #ccc",
-    padding: "15px",
-    marginTop: "15px",
-  },
-};
 
 export default RequirementsInput;

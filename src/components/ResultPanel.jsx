@@ -1,106 +1,190 @@
 import React from "react";
 
-function ResultPanel({ result }) {
+// Map severity → CSS class
+const SEVERITY_CLASS = {
+  high:   "issue-item--fail",
+  medium: "issue-item--warn",
+  low:    "issue-item--pass",
+};
+
+const SEVERITY_LABEL = {
+  high:   "HIGH",
+  medium: "MED",
+  low:    "LOW",
+};
+
+// Score gauge colour
+function scoreColor(s) {
+  if (s >= 80) return "var(--pass)";
+  if (s >= 55) return "var(--warn)";
+  return "var(--fail)";
+}
+
+function ResultPanel({ result, originalPreview }) {
   if (!result) return null;
 
+  const { score, summary, issues = [], strengths = [], quick_fixes = [], meta = {} } = result;
+
   return (
-    <div style={styles.box}>
-      <h3>Analysis Result</h3>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {result.status === "success" && (
-        <div style={styles.success}>
-          ✅ Submit Successfully!
-          <div style={styles.subMessage}>{result.message}</div>
+      {/* ── Score header ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+        {/* Circular score */}
+        <div style={{
+          width: 80, height: 80, borderRadius: "50%",
+          border: `4px solid ${scoreColor(score)}`,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+          boxShadow: `0 0 16px ${scoreColor(score)}44`,
+        }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: scoreColor(score), lineHeight: 1 }}>
+            {score}
+          </span>
+          <span style={{ fontSize: 9, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1 }}>
+            /100
+          </span>
+        </div>
+
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span className="result-title">QA Report</span>
+            <span className={`result-badge ${score >= 80 ? "result-badge--pass" : "result-badge--warn"}`}>
+              {issues.filter(i => i.severity === "high").length} Critical
+            </span>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+            {summary}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Score bar ── */}
+      <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
+        <div style={{
+          height: "100%", width: `${score}%`,
+          background: scoreColor(score),
+          borderRadius: 2,
+          transition: "width 0.8s ease",
+        }} />
+      </div>
+
+      {/* ── Quick Fixes ── */}
+      {quick_fixes.length > 0 && (
+        <div className="result-section">
+          <div className="result-section__title">⚡ Top Quick Fixes</div>
+          <div className="result-section__body">
+            <ol style={{ paddingLeft: 18, display: "flex", flexDirection: "column", gap: 6 }}>
+              {quick_fixes.map((fix, i) => (
+                <li key={i} style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                  {fix}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       )}
 
-      <div style={styles.section}>
-        <strong>File:</strong> {result.original_name}
+      {/* ── Issues ── */}
+      <div className="result-section">
+        <div className="result-section__title">
+          🔍 Issues Found ({issues.length})
+        </div>
+        <div className="result-section__body">
+          {issues.length === 0 ? (
+            <p style={{ fontSize: 13, color: "var(--pass)" }}>✅ No issues detected.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {issues.map((issue, i) => (
+                <div key={i} className={`issue-item ${SEVERITY_CLASS[issue.severity] || "issue-item--pass"}`}
+                  style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+                  {/* Header row */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, letterSpacing: 1,
+                      padding: "2px 6px", borderRadius: 4,
+                      background: "rgba(0,0,0,0.2)",
+                    }}>
+                      {SEVERITY_LABEL[issue.severity]}
+                    </span>
+                    <span style={{ fontSize: 10, opacity: 0.7, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      {issue.category}
+                    </span>
+                    <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.6 }}>
+                      {issue.confidence ? `${Math.round(issue.confidence * 100)}% conf.` : ""}
+                    </span>
+                  </div>
+                  {/* Problem */}
+                  <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{issue.problem}</p>
+                  {/* Impact */}
+                  <p style={{ fontSize: 12, opacity: 0.8, margin: 0 }}>
+                    <strong>Impact:</strong> {issue.impact}
+                  </p>
+                  {/* Suggestion */}
+                  <p style={{ fontSize: 12, opacity: 0.8, margin: 0 }}>
+                    <strong>Fix:</strong> {issue.suggestion}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div style={styles.section}>
-        <strong>Requirements:</strong>
-        <p style={styles.text}>{result.requirements}</p>
-      </div>
-
-      {result.guidance && (
-        <div style={styles.section}>
-          <strong>Guidance:</strong>
-          <p style={styles.text}>{result.guidance}</p>
+      {/* ── Strengths ── */}
+      {strengths.length > 0 && (
+        <div className="result-section">
+          <div className="result-section__title">✅ Strengths</div>
+          <div className="result-section__body">
+            <ul className="issue-list">
+              {strengths.map((s, i) => (
+                <li key={i} className="issue-item issue-item--pass">{s}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 
-      <div style={styles.section}>
-        <strong>Image Issues:</strong>
-        <ul style={styles.list}>
-          {result.issues &&
-            result.issues.map((issue, index) => (
-              <li key={index} style={styles.issueItem}>
-                {issue}
-              </li>
-            ))}
-        </ul>
-      </div>
-
+      {/* ── Image Comparison ── */}
       {result.processed_file && (
-        <div style={styles.section}>
-          <strong>Processed Image (Grayscale):</strong>
-          <div style={styles.imageBox}>
-            <img
-              src={`http://127.0.0.1:8000/uploads/${result.processed_file}`}
-              alt="Processed"
-              style={styles.image}
-            />
+        <div className="result-section">
+          <div className="result-section__title">🖼 Image Comparison</div>
+          <div className="result-section__body">
+            <div className="image-grid">
+              {originalPreview && (
+                <div className="image-card">
+                  <div className="image-card__label">Original</div>
+                  <img src={originalPreview} alt="Original design" />
+                </div>
+              )}
+              <div className="image-card">
+                <div className="image-card__label">Grayscale QA View</div>
+                <img src={`/uploads/${result.processed_file}`} alt="Grayscale" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Meta / Debug ── */}
+      {meta && Object.keys(meta).length > 0 && (
+        <div className="result-section">
+          <div className="result-section__title">📊 Analysis Metadata</div>
+          <div className="result-section__body">
+            {Object.entries(meta).map(([k, v]) => (
+              <div className="meta-row" key={k}>
+                <span className="meta-row__key">{k.replace(/_/g, " ")}</span>
+                <span className="meta-row__val">
+                  {Array.isArray(v) ? (v.length ? v.join(", ") : "—") : String(v)}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
     </div>
   );
 }
-
-const styles = {
-  box: {
-    border: "1px solid #4CAF50",
-    padding: "20px",
-    marginTop: "20px",
-    background: "#f0f8f0",
-    borderRadius: "8px",
-  },
-  success: {
-    color: "#2e7d32",
-    fontWeight: "bold",
-    fontSize: "16px",
-    marginBottom: "15px",
-    padding: "10px",
-    background: "#c8e6c9",
-    borderRadius: "4px",
-  },
-  section: {
-    marginTop: "15px",
-  },
-  text: {
-    margin: "5px 0",
-    padding: "8px",
-    background: "#fff",
-    borderRadius: "4px",
-  },
-  list: {
-    margin: "5px 0",
-    paddingLeft: "20px",
-  },
-  issueItem: {
-    margin: "5px 0",
-    color: "#d32f2f",
-  },
-  imageBox: {
-    marginTop: "10px",
-  },
-  image: {
-    maxWidth: "100%",
-    maxHeight: "300px",
-    border: "1px solid #ccc",
-    borderRadius: "4px",
-  },
-};
 
 export default ResultPanel;

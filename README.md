@@ -1,70 +1,106 @@
-# Getting Started with Create React App
+# Design QA Tool
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A professional image QA analysis tool. Upload a design image, describe the requirements, and get instant feedback on resolution, aspect ratio, contrast, typography, and more.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Quick Start (Any Device)
 
-### `npm start`
+**Prerequisites:** [Node.js](https://nodejs.org/) + [Python 3.9+](https://www.python.org/downloads/) installed.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+git clone https://github.com/YOUR_USERNAME/design-qa-ui.git
+cd design-qa-ui
+npm install       # installs React deps + auto-sets up Python backend
+npm start         # starts everything — open http://localhost:3000
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+That's it. **Two commands.** Works on Windows, Mac, and Linux.
 
-### `npm test`
+> **Optional:** Install [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) for text detection and CTA analysis. The tool works without it — you just won't get typography/text-related checks.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## What Happens Under the Hood
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+npm install
+  └→ installs node_modules
+  └→ [postinstall] automatically:
+       └→ creates backend/venv (Python virtual environment)
+       └→ pip installs fastapi, uvicorn, opencv, pillow, etc.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+npm start
+  └→ starts React frontend at http://localhost:3000
+  └→ starts FastAPI backend at http://localhost:8000 (from the venv)
+  └→ proxy in package.json connects them
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## How It Works
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Upload a design image (PNG/JPG/WEBP, max 10 MB)
+2. Enter client requirements (e.g. "dark neon theme, 1:1 aspect ratio")
+3. Optionally add analysis guidance
+4. Click **Run Analysis**
+5. Get a professional QA report with score, issues, strengths, and quick fixes
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 8 Analysis Modules
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+| Module | What it checks |
+|--------|---------------|
+| Image Quality | Blur detection, resolution |
+| Layout & Alignment | Aspect ratio, spacing consistency |
+| Color & Contrast | WCAG 2.1 contrast ratios |
+| Typography | Font size consistency (requires Tesseract) |
+| Text Extraction | OCR text detection (requires Tesseract) |
+| CTA Detection | Call-to-action keyword detection |
+| Visual Hierarchy | Focal point, top-third analysis |
+| Spacing & Density | Overcrowding / sparse layout |
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Project Structure
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+design-qa-ui/
+├── backend/
+│   ├── main.py             ← FastAPI app entry point
+│   ├── routes/upload.py    ← 8-module analysis engine
+│   ├── uploads/            ← Stored images (git-ignored)
+│   └── requirements.txt    ← Python dependencies
+├── scripts/
+│   ├── setup-backend.js    ← Auto venv + pip install (runs on npm install)
+│   └── start-backend.js    ← Auto-finds uvicorn in venv (runs on npm start)
+├── src/
+│   ├── components/         ← React UI components
+│   ├── pages/Dashboard.jsx ← Main app page
+│   └── index.css           ← Dark tool theme
+└── package.json            ← proxy + scripts + postinstall hook
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## Individual Commands
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+| Command | What it does |
+|---------|-------------|
+| `npm start` | Starts both frontend + backend |
+| `npm run start:frontend` | React only |
+| `npm run start:backend` | FastAPI only |
+| `npm run build` | Production build |
+| `npm test` | Run tests |
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Tech Stack
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, Create React App |
+| Backend | FastAPI, Uvicorn |
+| Image Analysis | OpenCV, Pillow, NumPy |
+| OCR (optional) | Tesseract via pytesseract |
+| Styling | Vanilla CSS (Dark Theme) |
+| Dev Tooling | concurrently, CRA proxy |

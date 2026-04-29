@@ -2,25 +2,31 @@ import React from "react";
 
 function ModelGuidance({ value, setValue }) {
   return (
-    <div style={styles.box}>
-      <h3>Model Guidance (Optional)</h3>
-      <textarea
-        rows="4"
-        style={{ width: "100%" }}
-        placeholder="e.g. Focus more on typography and spacing consistency"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-      />
+    <div className="panel">
+      <div className="panel__header">
+        <span className="panel__header-icon">🧭</span>
+        Model Guidance
+        <span style={{ marginLeft: "auto" }}>
+          <span className="form-label__badge">Optional</span>
+        </span>
+      </div>
+      <div className="panel__body">
+        <div className="form-field">
+          <label className="form-label" htmlFor="guidance-input">
+            Focus hints for analysis
+          </label>
+          <textarea
+            id="guidance-input"
+            className="form-textarea"
+            rows={3}
+            placeholder="e.g. Focus on typography consistency and spacing rhythm..."
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
-
-const styles = {
-  box: {
-    border: "1px solid #ccc",
-    padding: "15px",
-    marginTop: "15px",
-  },
-};
 
 export default ModelGuidance;

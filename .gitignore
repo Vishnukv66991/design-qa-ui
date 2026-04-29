@@ -20,8 +20,9 @@ __pycache__/
 venv/
 env/
 
-# uploads (local files)
-backend/uploads/
+# uploads (ignore uploaded files, keep folder)
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # misc
 .DS_Store

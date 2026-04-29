@@ -1,58 +1,87 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 function UploadBox({ setFile }) {
   const [preview, setPreview] = useState(null);
+  const [fileName, setFileName] = useState(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const previewUrlRef = useRef(null);
 
-  const handleFile = (e) => {
-    const file = e.target.files[0];
+  // FIX: Revoke old object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
+  }, []);
 
+  const processFile = (file) => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Only image files allowed");
+      alert("Only image files are allowed.");
       return;
     }
 
-    setFile(file);
+    // Revoke previous URL before creating a new one
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+    }
 
-    // Create preview
     const imageUrl = URL.createObjectURL(file);
+    previewUrlRef.current = imageUrl;
+
+    setFile(file);
     setPreview(imageUrl);
+    setFileName(file.name);
+  };
+
+  const handleChange = (e) => processFile(e.target.files[0]);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    processFile(e.dataTransfer.files[0]);
   };
 
   return (
-    <div style={styles.box}>
-      <h3>Upload Design</h3>
-
-      <input type="file" onChange={handleFile} />
-
-      {/* Show preview */}
-      {preview && (
-        <div style={styles.previewContainer}>
-          <p>Preview:</p>
-          <img src={preview} alt="preview" style={styles.image} />
+    <div className="panel">
+      <div className="panel__header">
+        <span className="panel__header-icon">🖼</span>
+        Design File
+      </div>
+      <div className="panel__body">
+        <div
+          className={`upload-zone ${isDragOver ? "dragover" : ""}`}
+          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={handleDrop}
+        >
+          <input
+            id="file-input"
+            type="file"
+            accept="image/*"
+            onChange={handleChange}
+          />
+          <span className="upload-zone__icon">📂</span>
+          <span className="upload-zone__label">
+            {fileName ? "Click to change file" : "Drop image here or click to browse"}
+          </span>
+          <span className="upload-zone__sub">PNG, JPG, WEBP · Max 10 MB</span>
         </div>
-      )}
+
+        {preview && (
+          <div className="upload-preview">
+            <img src={preview} alt="preview" />
+            <div className="upload-preview__info">
+              <span className="upload-preview__dot" />
+              {fileName}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-const styles = {
-  box: {
-    border: "2px dashed #aaa",
-    padding: "20px",
-    textAlign: "center",
-  },
-  previewContainer: {
-    marginTop: "15px",
-  },
-  image: {
-    maxWidth: "100%",
-    height: "200px",
-    objectFit: "contain",
-    border: "1px solid #ddd",
-    padding: "5px",
-  },
-};
 
 export default UploadBox;
