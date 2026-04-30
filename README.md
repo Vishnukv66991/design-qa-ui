@@ -9,7 +9,7 @@ A professional image QA analysis tool. Upload a design image, describe the requi
 **Prerequisites:** [Node.js](https://nodejs.org/) + [Python 3.9+](https://www.python.org/downloads/) installed.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/design-qa-ui.git
+git clone https://github.com/Vishnukv66991/design-qa-ui.git
 cd design-qa-ui
 npm install       # installs React deps + auto-sets up Python backend
 npm start         # starts everything — open http://localhost:3000
