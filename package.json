@@ -15,8 +15,8 @@
   },
   "scripts": {
     "postinstall": "node scripts/setup-backend.js",
-    "start": "node scripts/ensure-ports-free.js && concurrently --names \"REACT,BACKEND\" --prefix-colors \"cyan,green\" \"react-scripts start\" \"node scripts/start-backend.js\"",
-    "start:frontend": "react-scripts start",
+    "start": "node scripts/ensure-ports-free.js && concurrently --names \"REACT,BACKEND\" --prefix-colors \"cyan,green\" \"node scripts/start-frontend.js\" \"node scripts/start-backend.js\"",
+    "start:frontend": "node scripts/start-frontend.js",
     "start:backend": "node scripts/start-backend.js",
     "build": "react-scripts build",
     "test": "react-scripts test",

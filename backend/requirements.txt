@@ -5,3 +5,5 @@ Pillow>=10.0.0
 numpy>=1.26.0
 opencv-python-headless>=4.9.0.80
 pytesseract>=0.3.10
+pyspellchecker>=0.7.2
+pypdfium2>=4.30.0

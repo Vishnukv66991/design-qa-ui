@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import UploadBox from "../components/UploadBox";
 import RequirementsInput from "../components/RequirementsInput";
 import ModelGuidance from "../components/ModelGuidance";
@@ -8,19 +8,32 @@ function Dashboard() {
   const [file, setFile] = useState(null);
   const [requirements, setRequirements] = useState("");
   const [guidance, setGuidance] = useState("");
+  const [selectedModule, setSelectedModule] = useState("all");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // Keep a local preview URL so ResultPanel can show "original" side-by-side
   const [originalPreview, setOriginalPreview] = useState(null);
 
+  useEffect(() => {
+    return () => {
+      if (originalPreview) {
+        URL.revokeObjectURL(originalPreview);
+      }
+    };
+  }, [originalPreview]);
+
   const handleSetFile = (f) => {
+    if (originalPreview) {
+      URL.revokeObjectURL(originalPreview);
+    }
     setFile(f);
-    setOriginalPreview(f ? URL.createObjectURL(f) : null);
-    // Clear previous result when a new file is chosen
+    const previewable = f && (f.type.startsWith("image/") || f.type.startsWith("video/"));
+    setOriginalPreview(previewable ? URL.createObjectURL(f) : null);
     setResult(null);
     setError(null);
   };
+
+  const API_BASE = process.env.REACT_APP_API_BASE_URL || "";
 
   const handleAnalyze = async () => {
     if (!file) {
@@ -42,13 +55,12 @@ function Dashboard() {
     formData.append("guidance", guidance);
 
     try {
-      // FIX: Use relative URL — CRA proxy in package.json routes this to localhost:8000
-      const response = await fetch("/analyze", {
+      const url = `${API_BASE}/analyze`;
+      const response = await fetch(url, {
         method: "POST",
         body: formData,
       });
 
-      // FIX: Read the actual error message from the backend response
       if (!response.ok) {
         let errorMessage = `Server error (${response.status})`;
         try {
@@ -94,6 +106,40 @@ function Dashboard() {
           <UploadBox setFile={handleSetFile} />
           <RequirementsInput value={requirements} setValue={setRequirements} />
           <ModelGuidance value={guidance} setValue={setGuidance} />
+          <div className="panel">
+            <div className="panel__header">
+              <span className="panel__header-icon">🧪</span>
+              Module Scope
+            </div>
+            <div className="panel__body">
+              <div className="form-field">
+                <label className="form-label" htmlFor="module-select">
+                  Choose module(s) to test
+                </label>
+                <select
+                  id="module-select"
+                  className="form-select"
+                  value={selectedModule}
+                  onChange={(e) => setSelectedModule(e.target.value)}
+                >
+                  <option value="all">All Modules</option>
+                  <option value="image_quality">Image Quality</option>
+                  <option value="layout">Layout & Alignment</option>
+                  <option value="color_contrast">Color & Contrast</option>
+                  <option value="typography_ocr">Typography + OCR</option>
+                  <option value="density">Spacing & Density</option>
+                  <option value="image_forensics">Image Forensics</option>
+                  <option value="color_palette">Color Palette</option>
+                  <option value="edge_precision">Edge Precision</option>
+                  <option value="duplicates_overlaps">Duplicates & Overlaps</option>
+                  <option value="exposure_analysis">Exposure</option>
+                  <option value="cta_detection">CTA Detection</option>
+                  <option value="visual_hierarchy">Visual Hierarchy</option>
+                  <option value="spelling_locale">Spelling & Locale</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           {/* Analyze button + error */}
           <div className="panel" style={{ border: "none", padding: "16px" }}>
@@ -131,7 +177,7 @@ function Dashboard() {
               <span className="tool-empty-state__icon">🎨</span>
               <span className="tool-empty-state__title">No Analysis Yet</span>
               <span className="tool-empty-state__sub">
-                Upload a design image, enter the requirements, then click <strong>Run Analysis</strong>.
+                Upload an image/video/PDF, enter the requirements, choose module scope, then click <strong>Run Analysis</strong>.
               </span>
             </div>
           )}

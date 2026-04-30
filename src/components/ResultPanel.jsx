@@ -23,7 +23,17 @@ function scoreColor(s) {
 function ResultPanel({ result, originalPreview }) {
   if (!result) return null;
 
-  const { score, summary, issues = [], strengths = [], quick_fixes = [], meta = {} } = result;
+  const {
+    score,
+    summary,
+    issues = [],
+    strengths = [],
+    quick_fixes = [],
+    meta = {},
+    module_status = {},
+    requirements_coverage = {},
+    content_type = "",
+  } = result;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -82,6 +92,44 @@ function ResultPanel({ result, originalPreview }) {
                 </li>
               ))}
             </ol>
+          </div>
+        </div>
+      )}
+
+      {/* ── Requirement Coverage ── */}
+      {requirements_coverage && (
+        <div className="result-section">
+          <div className="result-section__title">📌 Requirements Coverage</div>
+          <div className="result-section__body">
+            <div className="meta-row">
+              <span className="meta-row__key">Covered modules</span>
+              <span className="meta-row__val">
+                {(requirements_coverage.covered_modules || []).join(", ") || "None matched"}
+              </span>
+            </div>
+            <div className="meta-row">
+              <span className="meta-row__key">Missing requested modules</span>
+              <span className="meta-row__val">
+                {(requirements_coverage.missing_modules || []).join(", ") || "None"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Module Status ── */}
+      {module_status && Object.keys(module_status).length > 0 && (
+        <div className="result-section">
+          <div className="result-section__title">🧩 Module Run Status</div>
+          <div className="result-section__body">
+            {Object.entries(module_status).map(([key, val]) => (
+              <div className="meta-row" key={key}>
+                <span className="meta-row__key">{key.replace(/_/g, " ")}</span>
+                <span className="meta-row__val">
+                  {val.status}{val.reason ? ` (${val.reason})` : ""}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -147,7 +195,7 @@ function ResultPanel({ result, originalPreview }) {
       )}
 
       {/* ── Image Comparison ── */}
-      {result.processed_file && (
+      {result.processed_file && content_type.startsWith("image/") && (
         <div className="result-section">
           <div className="result-section__title">🖼 Image Comparison</div>
           <div className="result-section__body">

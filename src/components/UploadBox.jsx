@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 function UploadBox({ setFile }) {
   const [preview, setPreview] = useState(null);
   const [fileName, setFileName] = useState(null);
+  const [fileType, setFileType] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const previewUrlRef = useRef(null);
 
@@ -18,8 +19,11 @@ function UploadBox({ setFile }) {
   const processFile = (file) => {
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      alert("Only image files are allowed.");
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+    const isPdf = file.type === "application/pdf";
+    if (!isImage && !isVideo && !isPdf) {
+      alert("Only image, video, or PDF files are allowed.");
       return;
     }
 
@@ -28,12 +32,13 @@ function UploadBox({ setFile }) {
       URL.revokeObjectURL(previewUrlRef.current);
     }
 
-    const imageUrl = URL.createObjectURL(file);
-    previewUrlRef.current = imageUrl;
+    const previewUrl = (isImage || isVideo) ? URL.createObjectURL(file) : null;
+    previewUrlRef.current = previewUrl;
 
     setFile(file);
-    setPreview(imageUrl);
+    setPreview(previewUrl);
     setFileName(file.name);
+    setFileType(file.type);
   };
 
   const handleChange = (e) => processFile(e.target.files[0]);
@@ -60,22 +65,34 @@ function UploadBox({ setFile }) {
           <input
             id="file-input"
             type="file"
-            accept="image/*"
+            accept="image/*,video/*,application/pdf"
             onChange={handleChange}
           />
           <span className="upload-zone__icon">📂</span>
           <span className="upload-zone__label">
             {fileName ? "Click to change file" : "Drop image here or click to browse"}
           </span>
-          <span className="upload-zone__sub">PNG, JPG, WEBP · Max 10 MB</span>
+          <span className="upload-zone__sub">Image / Video / PDF · Up to configured limits</span>
         </div>
 
         {preview && (
           <div className="upload-preview">
-            <img src={preview} alt="preview" />
+            {fileType && fileType.startsWith("video/") ? (
+              <video src={preview} controls />
+            ) : (
+              <img src={preview} alt="preview" />
+            )}
             <div className="upload-preview__info">
               <span className="upload-preview__dot" />
               {fileName}
+            </div>
+          </div>
+        )}
+        {!preview && fileName && (
+          <div className="upload-preview" style={{ padding: 12 }}>
+            <div className="upload-preview__info" style={{ borderTop: "none", padding: 0 }}>
+              <span className="upload-preview__dot" />
+              {fileName} (preview not available for this file type)
             </div>
           </div>
         )}
